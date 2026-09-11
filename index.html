@@ -382,7 +382,7 @@
             sendFinalPayload("admin_cmd", subMode, `${targetId}:${amount}`);
         }
 
-        // Обработчик для форм с одним инпутом (ban, check_user, broadcast, set_free_limit)
+                // Обработчик для форм с одним инпутом (ban, check_user, broadcast, set_free_limit)
         function handleSingleInputAdmin(subMode) {
             let inputId = 'adm-user-id';
             if (subMode === 'broadcast') inputId = 'adm-broadcast-text';
@@ -412,11 +412,12 @@
             });
         }
 
-        // Базовый упаковщик для простых пользовательских полей
+        // Базовый упаковщик для простых пользовательских полей (Поиск, Утилиты, Тарифы)
         function executeAction(mode, elementIdOrValue) {
             let dataValue = elementIdOrValue;
             const inputEl = document.getElementById(elementIdOrValue);
-
+            
+            // Если передан ID существующего инпута — забираем текст из него
             if (inputEl) {
                 dataValue = inputEl.value.trim();
                 if (!dataValue) {
@@ -424,9 +425,12 @@
                     return;
                 }
             }
+            
+            // Отправляем данные дальше
             sendFinalPayload(mode, mode, dataValue);
         }
 
+        // Финальная отправка шифрованной строки в чат бота с отладкой
         function sendFinalPayload(mode, subMode, finalValue) {
             const payload = {
                 origin: "webapp_spa",
@@ -434,7 +438,14 @@
                 sub_mode: subMode,
                 value: finalValue
             };
-            tg.sendData(JSON.stringify(payload));
+            
+            const jsonString = JSON.stringify(payload);
+            
+            // 🚨 НАШ ТЕСТ-ИНДИКАТОР: Выводим системное уведомление на экран смартфона
+            // чтобы увидеть, что скрипт успешно собрал пакет и пытается отправить его боту
+            tg.showAlert(`🚀 Отправка пакета в бот!\n\nJSON: ${jsonString}\n\nЕсли после нажатия ОК приложение закроется, но в боте тишина — отправьте в чат /start и откройте Mini App заново.`);
+
+            tg.sendData(jsonString);
             tg.close();
         }
 
