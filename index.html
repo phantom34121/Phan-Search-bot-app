@@ -497,18 +497,22 @@ function sendDataToBot(mode, value, subMode = null) {
     
     const jsonString = JSON.stringify(payload);
     
-    // Кодируем строку в Base64 с поддержкой кириллицы (для рассылок и поиска)
-    const base64Payload = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+    // 🔥 НАДЕЖНЫЙ UTF-8 КОДИРОВЩИК ДЛЯ РУССКИХ БУКВ
+    // btoa() ломается на кириллице, поэтому сначала переводим строку в URL-формат,
+    // кодируем побайтово и только потом собираем в Base64.
+    const utf8Bytes = encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
         return String.fromCharCode('0x' + p1);
-    }));
+    });
+    const base64Payload = btoa(utf8Bytes);
     
-    // ⚠️ СЮДА УКАЖИТЕ ТОЧНЫЙ ЮЗЕРНЕЙМ ВАШЕГО БОТА (БЕЗ СОБАЧКИ @):
+    // ⚠️ ЗАМЕНИТЕ ЭТО СТРОГО НА ЮЗЕРНЕЙМ ВАШЕГО БОТА (БЕЗ ЗНАКА @):
     const botUsername = "ИМЯ_ВАШЕГО_БОТА"; 
     
-    // Перенаправляем пользователя по универсальной ссылке-команде
+    // Отправляем универсальный диплинк в мессенджер
     tg.openTelegramLink(`https://t.me{botUsername}?start=${base64Payload}`);
     tg.close();
 }
+
 
 
 
