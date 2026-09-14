@@ -4,457 +4,578 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Phantom OSINT & DB — Управление</title>
-    <!-- Официальный скрипт Telegram WebApp SDK -->
+    <!-- Официальный скрипт Telegram WebApp -->
     <script src="https://telegram.org"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #17212b);
-            --text-color: var(--tg-theme-text-color, #f5f5f5);
-            --button-color: var(--tg-theme-button-color, #5288c1);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #708499);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #232e3c);
-            --accent-color: #4caf50;
-            --danger-color: #e53935;
+            --bg-color: #0d0f12;
+            --container-bg: #161920;
+            --accent-color: #00ffcc;
+            --accent-hover: #00cc99;
+            --text-main: #f5f6f7;
+            --text-muted: #8f9cae;
+            --border-color: #242936;
+            --danger-color: #ff4a5a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px;
-            box-sizing: border-box;
-            -webkit-user-select: none;
-            user-select: none;
+            color: var(--text-main);
+            padding: 15px;
+            padding-bottom: 80px; /* Отступ под нижний навигатор */
         }
 
-        /* Навигация (Нижний Таб-бар) */
-        .tab-bar {
+        h1, h2 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 22px;
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h2 {
+            font-size: 16px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section {
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        button.danger {
+            background-color: transparent;
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        /* Сетка для тарифов */
+        .tariff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 360px) {
+            .tariff-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tariff-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .tariff-card h3 {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .tariff-card p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .tariff-card button {
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        /* Кнопки дополнительных бонусов */
+        .bonus-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .bonus-row button {
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        /* Профиль */
+        .profile-info {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .profile-info span {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Сетка утилит админа */
+        .admin-utilities {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        /* Нижний навигатор */
+        .nav-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             height: 60px;
-            background-color: var(--secondary-bg);
+            background-color: var(--container-bg);
+            border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
             z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--hint-color);
+        .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-decoration: none;
             cursor: pointer;
-            gap: 4px;
-            flex: 1;
         }
 
-        .tab-btn.active { color: var(--button-color); }
-        .tab-btn-icon { font-size: 1.3rem; }
-
-        /* Экраны */
-        .screen { display: none; padding: 15px; }
-        .screen.active { display: block; }
-
-        /* Карточки */
-        .card {
-            background-color: var(--secondary-bg);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        .nav-item.active {
+            color: var(--accent-color);
         }
 
-        h2 {
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 1.05rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--button-color);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 6px;
+        .nav-icon {
+            font-size: 18px;
+            margin-bottom: 2px;
         }
 
-        .input-group { margin-bottom: 12px; }
-        .input-group label {
+        /* Переключатель вкладок SPA */
+        .page {
+            display: none;
+        }
+        .page.active {
             display: block;
-            font-size: 0.85rem;
-            color: var(--hint-color);
-            margin-bottom: 6px;
         }
-
-        .input-field {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--bg-color);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--text-color);
-            box-sizing: border-box;
-            font-size: 0.95rem;
-        }
-        .input-field:focus { outline: none; border-color: var(--button-color); }
-
-        .btn {
-            width: 100%;
-            background-color: var(--button-color);
-            color: var(--button-text);
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .btn:active { transform: scale(0.98); }
-        .btn-danger { background-color: var(--danger-color); }
-        .btn-success { background-color: var(--accent-color); }
-        .btn-secondary { background: rgba(255, 255, 255, 0.06); color: var(--text-color); margin-bottom: 10px; }
-        .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
-
-        .row-btn-group { display: flex; gap: 10px; margin-top: 10px; }
-
-        .grid-list { display: flex; flex-direction: column; gap: 10px; }
-        .grid-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .progress-bar { background: rgba(255, 255, 255, 0.1); border-radius: 8px; height: 8px; overflow: hidden; margin-top: 6px; }
-        .progress-fill { background: var(--button-color); height: 100%; width: 0%; transition: width 0.3s; }
-        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.9rem; }
-        .info-row:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
 
-    <!-- ================= ЭКРАН 1: ПОИСК БАЗЫ ================= -->
-    <div id="screen-search" class="screen active">
-        <div class="card">
+    <h1>Phantom OSINT & DB</h1>
+
+    <!-- ========================================== -->
+    <!-- СТРАНИЦА 1: ПОИСК                          -->
+    <!-- ========================================== -->
+    <div id="page-search" class="page active">
+        <div class="section">
             <h2>🔍 Поиск по базам данных</h2>
             <div class="input-group">
                 <label>Полнотекстовый поисковый запрос (Слово, Артикул, ИНН, ФИО):</label>
-                <input type="text" id="search-query" class="input-field" placeholder="Введите поисковый запрос...">
+                <input type="text" id="searchQueryInput" placeholder="Иванов Иван Иванович...">
             </div>
-            <button class="btn" onclick="executeAction('search_db', 'search-query')">Искать в FTS5 индексах</button>
+            <button onclick="triggerSearch()">Искать в FTS5 индексах</button>
         </div>
 
-        <div class="card">
-            <h2>🔄 База файлов</h2>
-            <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="executeAction('sys_nav', 'refresh_db')">Обновить базу файлов (Синхронизация)</button>
+        <div class="section">
+            <h2>静态 Утилиты базы</h2>
+            <button class="secondary" onclick="navRefreshDB()">🔄 Обновить базу файлов (Синхронизация)</button>
         </div>
     </div>
 
-    <!-- ================= ЭКРАН 2: OSINT ИНСТРУМЕНТЫ ================= -->
-    <div id="screen-tools" class="screen">
-        <div class="card">
+    <!-- ========================================== -->
+    <!-- СТРАНИЦА 2: OSINT                          -->
+    <!-- ========================================== -->
+    <div id="page-osint" class="page">
+        <div class="section">
             <h2>📱 Пробив телефона</h2>
             <div class="input-group">
-                <input type="text" id="tool-phone" class="input-field" placeholder="Пример: +79991234567">
+                <input type="text" id="phoneInput" placeholder="79991234567">
             </div>
-            <button class="btn" onclick="executeAction('tool_phone', 'tool-phone')">Узнать оператора и регион</button>
+            <button onclick="toolPhone()">Узнать оператора и регион</button>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🌐 Пробив по IP</h2>
             <div class="input-group">
-                <input type="text" id="tool-ip" class="input-field" placeholder="Пример: 8.8.8.8">
+                <input type="text" id="ipInput" placeholder="8.8.8.8">
             </div>
-            <button class="btn" onclick="executeAction('tool_ip', 'tool-ip')">Запустить OSINT-анализ IP</button>
+            <button onclick="toolIP()">Запустить OSINT-анализ IP</button>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🆔 Узнать ID по Юзеру</h2>
             <div class="input-group">
-                <input type="text" id="tool-id" class="input-field" placeholder="Пример: durov">
+                <input type="text" id="usernameInput" placeholder="durov">
             </div>
-            <button class="btn" onclick="executeAction('tool_id', 'tool-id')">Извлечь ID из баз/анкет</button>
+            <button onclick="toolID()">Извлечь ID из баз/анкет</button>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🕵️‍♂️ Sherlock никнейма</h2>
             <div class="input-group">
-                <input type="text" id="tool-sherlock" class="input-field" placeholder="Вводите ник без @">
+                <input type="text" id="sherlockInput" placeholder="username">
             </div>
-            <button class="btn" onclick="executeAction('tool_sherlock', 'tool-sherlock')">Сканировать по 10 платформам</button>
+            <button onclick="toolSherlock()">Сканировать по 10 платформам</button>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🌐 WHOIS домена</h2>
             <div class="input-group">
-                <input type="text" id="tool-whois" class="input-field" placeholder="Пример: google.com">
+                <input type="text" id="domainInput" placeholder="google.com">
             </div>
-            <button class="btn" onclick="executeAction('tool_whois', 'tool-whois')">Проверить DNS шлюзы</button>
+            <button onclick="toolWhois()">Проверить DNS шлюзы</button>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🔒 Проверка пароля</h2>
             <div class="input-group">
-                <input type="password" id="tool-pwned" class="input-field" placeholder="Введите проверяемый пароль">
+                <input type="text" id="passwordInput" placeholder="password123">
             </div>
-            <button class="btn" onclick="executeAction('tool_pwned', 'tool-pwned')">Проверить утечки в HaveIBeenPwned</button>
+            <button onclick="toolPwned()">Проверить утечки в HaveIBeenPwned</button>
         </div>
     </div>
 
-    <!-- ================= ЭКРАН 3: ЛИЧНЫЙ КАБИНЕТ И ТАРИФЫ ================= -->
-    <div id="screen-profile" class="screen">
-        <div class="card">
+    <!-- ========================================== -->
+    <!-- СТРАНИЦА 3: ЛИЧНЫЙ КАБИНЕТ И ТАРИФЫ       -->
+    <!-- ========================================== -->
+    <div id="page-cabinet" class="page">
+        <div class="section">
             <h2>👤 Мой профиль</h2>
-            <div class="info-row"><span>Имя:</span><span id="lbl-name" style="font-weight: bold;">-</span></div>
-            <div class="info-row"><span>Telegram ID:</span><span id="lbl-id">000000000</span></div>
-            <div class="info-row"><span>Бесплатных сегодня:</span><span id="free-requests-text">0 из 5</span></div>
-            <div class="progress-bar"><div id="free-progress" class="progress-fill"></div></div>
-            <div class="info-row" style="margin-top: 10px;"><span>Купленных (не сгорают):</span><span id="paid-balance-text" style="color: var(--accent-color); font-weight: bold;">0 шт.</span></div>
-        </div>
-
-        <div class="card">
-            <h2>🛍️ Тарифная сетка (Оплата)</h2>
-            <div class="grid-list">
-                <div class="grid-item">
-                    <div><b>🥉 Стартовый пакет</b><br><small style="color:var(--hint-color)">100 запр. — 150 ₽ / Stars</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'small')">Купить</button>
-                </div>
-                <div class="grid-item">
-                    <div><b>🥈 Продвинутый пакет</b><br><small style="color:var(--hint-color)">500 запр. — 750 ₽ / Stars</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'medium')">Купить</button>
-                </div>
-                <div class="grid-item">
-                    <div><b>🥇 Максимальный пакет</b><br><small style="color:var(--hint-color)">2000 запр. — 900 ₽ / Stars</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'large')">Купить</button>
-                </div>
-                <div class="grid-item">
-                    <div><b>💼 Командный пакет</b><br><small style="color:var(--hint-color)">5000 запр. — 10000 ₽</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'team')">Купить</button>
-                </div>
-                <div class="grid-item">
-                    <div><b>👑 Оптовый (Реселлер)</b><br><small style="color:var(--hint-color)">15000 запр. — 30000 ₽</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'reseller')">Купить</button>
-                </div>
-                <div class="grid-item">
-                    <div><b>♾️ Месячный Безлимит</b><br><small style="color:var(--hint-color)">Полный доступ — 50000 ₽</small></div>
-                    <button class="btn btn-sm" onclick="executeAction('buy_pack', 'unlimited')">Купить</button>
-                </div>
+            <div class="profile-info">
+                <p>Имя: <span id="prof-name">Загрузка...</span></p>
+                <p>Telegram ID: <span id="prof-id">000000000</span></p>
+                <p>Бесплатных сегодня: <span id="prof-free">0 из 5</span></p>
+                <p>Купленных (не сгорают): <span id="prof-paid">0 шт.</span></p>
             </div>
         </div>
 
-        <button class="btn btn-secondary" onclick="executeAction('sys_nav', 'custom_pieces')">⭐️ Купить штучно</button>
-        <button class="btn btn-secondary" onclick="executeAction('sys_nav', 'promo')">🔑 Промокод</button>
-        <button class="btn btn-secondary" onclick="executeAction('sys_nav', 'history')">🕒 История поиска</button>
-        <button class="btn btn-secondary" onclick="executeAction('sys_nav', 'claim_free')">🎁 Получить бонусы</button>
+        <div class="section">
+            <h2>🛍️ Тарифная сетка (Оплата)</h2>
+            <div class="tariff-grid">
+                <div class="tariff-card">
+                    <h3>🥉 Стартовый пакет</h3>
+                    <p>100 запр. — 150 ₽ / Stars</p>
+                    <button onclick="buyPack('small')">Купить</button>
+                </div>
+                <div class="tariff-card">
+                    <h3>🥈 Продвинутый пакет</h3>
+                    <p>500 запр. — 750 ₽ / Stars</p>
+                    <button onclick="buyPack('medium')">Купить</button>
+                </div>
+                <div class="tariff-card">
+                    <h3>🥇 Максимальный пакет</h3>
+                    <p>2000 запр. — 900 ₽ / Stars</p>
+                    <button onclick="buyPack('large')">Купить</button>
+                </div>
+                <div class="tariff-card">
+                    <h3>💼 Командный пакет</h3>
+                    <p>5000 запр. — 10000 ₽</p>
+                    <button onclick="buyPack('team')">Купить</button>
+                </div>
+                <div class="tariff-card">
+                    <h3>👑 Оптовый (Реселлер)</h3>
+                    <p>15000 запр. — 30000 ₽</p>
+                    <button onclick="buyPack('reseller')">Купить</button>
+                </div>
+                <div class="tariff-card">
+                    <h3>♾ Месячный Безлимит</h3>
+                    <p>Полный доступ — 5000 ₽</p>
+                    <button onclick="buyPack('unlimited')">Купить</button>
+                </div>
+            </div>
+
+            <div class="bonus-row">
+                <button class="secondary" onclick="navPieces()">⭐ Купить штучно</button>
+                <button class="secondary" onclick="navPromo()">🔑 Промокод</button>
+            </div>
+            <div class="bonus-row">
+                <button class="secondary" onclick="navHistory()">🕒 История поиска</button>
+                <button class="secondary" onclick="navClaimFree()">🎁 Получить бонусы</button>
+            </div>
+        </div>
     </div>
 
-    <!-- ================= ЭКРАН 4: АДМИН-ПАНЕЛЬ ================= -->
-    <div id="screen-admin" class="screen">
-        <div class="card">
+    <!-- ========================================== -->
+    <!-- СТРАНИЦА 4: АДМИН-ПАНЕЛЬ                  -->
+    <!-- ========================================== -->
+    <div id="page-admin" class="page">
+        <div class="section">
             <h2>➕ Управление балансами пользователей</h2>
             <div class="input-group">
                 <label>Telegram ID целевого пользователя:</label>
-                <input type="text" id="adm-target-id" class="input-field" placeholder="Вставьте числовой ID">
+                <input type="number" id="adminTargetId" placeholder="6146253635">
             </div>
             <div class="input-group">
                 <label>Количество запросов (штук):</label>
-                <input type="text" id="adm-amount" class="input-field" placeholder="Например: 50">
+                <input type="number" id="adminAmount" placeholder="10">
             </div>
-            <div class="row-btn-group">
-                <button class="btn btn-success" onclick="handleFormAdmin('give')">Выдать запросы</button>
-                <button class="btn" style="background:#ff9800;" onclick="handleFormAdmin('take')">Забрать запросы</button>
+            <div class="bonus-row">
+                <button onclick="adminModifyBalance('give')">Выдать запросы</button>
+                <button class="danger" onclick="adminModifyBalance('take')">Забрать запросы</button>
             </div>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>🔒 Контроль и проверка пользователей</h2>
             <div class="input-group">
                 <label>Telegram ID для блокировки или карточки:</label>
-                <input type="text" id="adm-user-id" class="input-field" placeholder="ID пользователя">
+                <input type="number" id="adminControlId" placeholder="6146253635">
             </div>
-            <div class="row-btn-group">
-                <button class="btn btn-danger" onclick="handleSingleInputAdmin('ban')">🛑 Бан / Разбан</button>
-                <button class="btn btn-secondary" style="margin-bottom:0;" onclick="handleSingleInputAdmin('check_user')">🔎 Проверить юзера</button>
+            <div class="bonus-row">
+                <button class="danger" onclick="adminControlUser('ban')">🛑 Бан / Разбан</button>
+                <button class="secondary" onclick="adminControlUser('check_user')">🔎 Проверить юзера</button>
             </div>
         </div>
 
-        <div class="card">
+        <div class="section">
             <h2>📢 Массовая рассылка</h2>
             <div class="input-group">
                 <label>Текст объявления для всех пользователей бота:</label>
-                <input type="text" id="adm-broadcast-text" class="input-field" placeholder="Введите сообщение...">
+                <textarea id="broadcastTextArea" placeholder="Внимание! Технические работы..."></textarea>
             </div>
-            <button class="btn" onclick="handleSingleInputAdmin('broadcast')">Запустить рассылку объявлений</button>
+            <button onclick="adminBroadcast()">Запустить рассылку объявлений</button>
         </div>
 
-        <div class="card">
-            <h2>⚙️ Конфигурация системных лимитов</h2>
+        <div class="section">
+            <h2>⚙ Конфигурация системных лимитов</h2>
             <div class="input-group">
                 <label>Новый суточный бесплатный лимит (число):</label>
-                <input type="text" id="adm-free-limit" class="input-field" placeholder="По умолчанию: 5">
+                <input type="number" id="freeLimitInput" placeholder="5">
             </div>
-            <button class="btn btn-secondary" onclick="handleSingleInputAdmin('set_free_limit')">Изменить бесплатный лимит</button>
+            <button onclick="adminSetFreeLimit()">Изменить бесплатный лимит</button>
         </div>
 
-        <div class="card">
-            <h2>🛠️ Системные команды и утилиты сервера</h2>
-            <div class="grid-list">
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('stats')">📊 Аналитика проекта в чат</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('backup')">🔐 Создать бэкап базы (.db + excel)</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('convert_utf8')">🔄 Перекодировать базы в UTF-8</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('maintenance')">🛠️ Переключить режим тех. работ</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('toggle_masking')">🔒 Переключить умную маскировку</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('reset_daily')">♻️ Обнулить сутки всем юзерам</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('modules_manager')">🎛️ Открыть рубильники функций</button>
-                <button class="btn btn-secondary" style="text-align:left; margin:0;" onclick="handleTriggerAdmin('file_manager')">🗂️ Открыть системный менеджер файлов</button>
+        <div class="section">
+            <h2>🛠 Системные команды и утилиты сервера</h2>
+            <div class="admin-utilities">
+                <button class="secondary" onclick="adminUtility('stats')">📊 Аналитика проекта в чат</button>
+                <button class="secondary" onclick="adminUtility('backup')">🔐 Создать бэкап базы (.db + excel)</button>
+                <button class="secondary" onclick="adminUtility('convert_utf8')">🔄 Перекодировать базы в UTF-8</button>
+                <button class="secondary" onclick="adminUtility('maintenance')">🛠 Переключить режим тех. работ</button>
+                <button class="secondary" onclick="adminUtility('toggle_masking')">🔒 Переключить умную маскировку</button>
+                <button class="secondary" onclick="adminUtility('reset_daily')">♻ Обнулить сутки всем юзерам</button>
+                <button class="secondary" onclick="adminUtility('modules_manager')">🎛 Открыть рубильники функций</button>
+                <button class="secondary" onclick="adminUtility('file_manager')">🗂 Открыть системный менеджер файлов</button>
             </div>
         </div>
     </div>
 
-    <!-- ================= НИЖНЯЯ НАВИГАЦИЯ (ТАБ-БАР) ================= -->
-    <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('search')">
-            <span class="tab-btn-icon">🔍</span><span>Поиск</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('tools')">
-            <span class="tab-btn-icon">🛠️</span><span>OSINT</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('profile')">
-            <span class="tab-btn-icon">👤</span><span>Кабинет</span>
-        </button>
-        <button id="tab-admin-nav" class="tab-btn" style="display: none;" onclick="switchTab('admin')">
-            <span class="tab-btn-icon">⚙️</span><span>Админка</span>
-        </button>
+    <!-- Нижняя навигационная панель -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchPage('search', this)">
+            <div class="nav-icon">🔍</div>
+            <div>Поиск</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('osint', this)">
+            <div class="nav-icon">🛠</div>
+            <div>OSINT</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('cabinet', this)">
+            <div class="nav-icon">👤</div>
+            <div>Кабинет</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('admin', this)">
+            <div class="nav-icon">⚙</div>
+            <div>Админка</div>
+        </div>
     </div>
 
-    <!-- ================= УПРАВЛЯЮЩИЙ СКРИПТ (JS) ================= -->    <!-- ================= УПРАВЛЯЮЩИЙ СКРИПТ (JS) ================= -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        tg.MainButton.text = "ЗАКРЫТЬ МЕНЮ";
-        tg.MainButton.show();
-        tg.MainButton.onClick(() => tg.close());
-
-        // Автоматически подгруженные ID администраторов из вашей конфигурации
-        const ADMIN_IDS =;
-
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('lbl-name').innerText = user.first_name + (user.username ? ` (@${user.username})` : '');
-            document.getElementById('lbl-id').innerText = user.id;
-
-            if (ADMIN_IDS.includes(Number(user.id))) {
-                document.getElementById('tab-admin-nav').style.display = 'flex';
-            }
+        // Парсинг параметров пользователя из Telegram WebApp API
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('prof-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            document.getElementById('prof-id').innerText = user.id;
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-            document.getElementById(`screen-${tabId}`).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Обработчик для форм с двумя инпутами (give / take)
-        function handleFormAdmin(subMode) {
-            const targetId = document.getElementById('adm-target-id').value.trim();
-            const amount = document.getElementById('adm-amount').value.trim();
-
-            if (!targetId || !amount) {
-                tg.showAlert("⚠️ Пожалуйста, заполните ID пользователя и Количество запросов!");
-                return;
-            }
-            sendFinalPayload("admin_cmd", subMode, `${targetId}:${amount}`);
-        }
-
-                // Обработчик для форм с одним инпутом (ban, check_user, broadcast, set_free_limit)
-        function handleSingleInputAdmin(subMode) {
-            let inputId = 'adm-user-id';
-            if (subMode === 'broadcast') inputId = 'adm-broadcast-text';
-            if (subMode === 'set_free_limit') inputId = 'adm-free-limit';
-
-            const value = document.getElementById(inputId).value.trim();
-            if (!value) {
-                tg.showAlert("⚠️ Заполните соответствующее текстовое поле перед отправкой!");
-                return;
-            }
-            sendFinalPayload("admin_cmd", subMode, value);
-        }
-
-        // Обработчик триггерных кнопок админа с Popup-подтверждением
-        function handleTriggerAdmin(subMode) {
-            tg.showPopup({
-                title: "Подтверждение команды",
-                message: `Вы действительно хотите запустить системную команду: [${subMode}]?`,
-                buttons: [
-                    {id: 'ok', type: 'default', text: 'Да, выполнить'},
-                    {id: 'cancel', type: 'cancel', text: 'Отмена'}
-                ]
-            }, (btnId) => {
-                if (btnId === 'ok') {
-                    sendFinalPayload("admin_cmd", subMode, "triggered");
-                }
-            });
-        }
-
-        // Базовый упаковщик для простых пользовательских полей (Поиск, Утилиты, Тарифы)
-        function executeAction(mode, elementIdOrValue) {
-            let dataValue = elementIdOrValue;
-            const inputEl = document.getElementById(elementIdOrValue);
+        // Логика переключения вкладок SPA-приложения
+        function switchPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             
-            // Если передан ID существующего инпута — забираем текст из него
-            if (inputEl) {
-                dataValue = inputEl.value.trim();
-                if (!dataValue) {
-                    tg.showAlert("⚠️ Заполните поле ввода перед отправкой!");
-                    return;
-                }
-            }
-            
-            // Отправляем данные дальше
-            sendFinalPayload(mode, mode, dataValue);
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            element.classList.add('active');
         }
 
-        // Финальная отправка шифрованной строки в чат бота с отладкой
-        function sendFinalPayload(mode, subMode, finalValue) {
+        // Универсальная функция отправки данных, интегрированная с aiogram бэкендом
+        function sendDataToBot(mode, value, subMode = null) {
             const payload = {
-                origin: "webapp_spa",
-                mode: mode,
-                sub_mode: subMode,
-                value: finalValue
+                origin: "webapp_spa", 
+                mode: mode,           
+                sub_mode: subMode,    
+                value: value          
             };
-            
-            const jsonString = JSON.stringify(payload);
-            
-            // 🚨 НАШ ТЕСТ-ИНДИКАТОР: Выводим системное уведомление на экран смартфона
-            // чтобы увидеть, что скрипт успешно собрал пакет и пытается отправить его боту
-            tg.showAlert(`🚀 Отправка пакета в бот!\n\nJSON: ${jsonString}\n\nЕсли после нажатия ОК приложение закроется, но в боте тишина — отправьте в чат /start и откройте Mini App заново.`);
-
-            tg.sendData(jsonString);
+            tg.sendData(JSON.stringify(payload));
             tg.close();
         }
 
-        // Изначальная инициализация шкалы лимитов ЛК
-        setTimeout(() => {
-            document.getElementById('free-requests-text').innerText = "0 из 5";
-            document.getElementById('free-progress').style.width = "0%";
-            document.getElementById('paid-balance-text').innerText = "0 шт.";
-        }, 200);
+        // Поиск по базам данных
+        function triggerSearch() {
+            const query = document.getElementById('searchQueryInput').value.trim();
+            if (!query) return alert('Введите поисковый запрос!');
+            sendDataToBot("search_db", query);
+        }
+
+        // OSINT-инструменты
+        function toolPhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) return alert('Введите номер телефона!');
+            sendDataToBot("tool_phone", phone);
+        }
+
+        function toolIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) return alert('Введите IP-адрес!');
+            sendDataToBot("tool_ip", ip);
+        }
+
+        function toolID() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return alert('Введите юзернейм!');
+            sendDataToBot("tool_id", username);
+        }
+
+        function toolSherlock() {
+            const nickname = document.getElementById('sherlockInput').value.trim();
+            if (!nickname) return alert('Введите никнейм!');
+            sendDataToBot("tool_sherlock", nickname);
+        }
+
+        // Навигационные и сервисные методы пользователей
+        function toolWhois() {
+            const domain = document.getElementById('domainInput').value.trim();
+            if (!domain) return alert('Введите домен!');
+            sendDataToBot("tool_whois", domain);
+        }
+
+        function toolPwned() {
+            const password = document.getElementById('passwordInput').value.trim();
+            if (!password) return alert('Введите пароль!');
+            sendDataToBot("tool_pwned", password);
+        }
+
+        function navPieces() { sendDataToBot("sys_nav", "custom_pieces"); }
+        function navPromo() { sendDataToBot("sys_nav", "promo"); }
+        function navHistory() { sendDataToBot("sys_nav", "history"); }
+        function navClaimFree() { sendDataToBot("sys_nav", "claim_free"); }
+        function navRefreshDB() { sendDataToBot("sys_nav", "refresh_db"); }
+
+        function buyPack(packName) {
+            sendDataToBot("buy_pack", packName);
+        }
+
+        // Панель администратора
+        function adminModifyBalance(actionType) {
+            const targetId = document.getElementById('adminTargetId').value.trim();
+            const amount = document.getElementById('adminAmount').value.trim();
+            if (!targetId || !amount) return alert('Заполните ID и количество!');
+            sendDataToBot("admin_cmd", `${targetId}:${amount}`, actionType); 
+        }
+
+        function adminControlUser(actionType) {
+            const targetId = document.getElementById('adminControlId').value.trim();
+            if (!targetId) return alert('Введите ID пользователя!');
+            sendDataToBot("admin_cmd", targetId, actionType); 
+        }
+
+        function adminBroadcast() {
+            const text = document.getElementById('broadcastTextArea').value.trim();
+            if (!text) return alert('Введите текст рассылки!');
+            sendDataToBot("admin_cmd", text, "broadcast");
+        }
+
+        // Изменение лимитов и вызов серверных скриптов (execute)
+        function adminSetFreeLimit() {
+            const limit = document.getElementById('freeLimitInput').value.trim();
+            if (!limit) return alert('Введите число!');
+            sendDataToBot("admin_cmd", limit, "set_free_limit");
+        }
+
+        function adminUtility(command) {
+            sendDataToBot("admin_cmd", "execute", command);
+        }
     </script>
 </body>
 </html>
