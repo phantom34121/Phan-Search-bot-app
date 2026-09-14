@@ -495,22 +495,21 @@ function sendDataToBot(mode, value, subMode = null) {
         value: value          
     };
     
-    // Переводим объект в строку JSON
     const jsonString = JSON.stringify(payload);
     
-    // Кодируем в формат Base64 (чтобы Telegram не ломал спецсимволы в ссылке)
-    // btoa не всегда дружит с кириллицей, поэтому используем безопасное кодирование:
-    const base64Payload = btoa(unescape(encodeURIComponent(jsonString)));
+    // Кодируем строку в Base64 с поддержкой кириллицы (для рассылок и поиска)
+    const base64Payload = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+    }));
     
-    // Замените 'ЮЗЕРНЕЙМ_ВАШЕГО_БОТА' на логин вашего бота в Telegram!
-    const botUsername = "ЮЗЕРНЕЙМ_ВАШЕГО_БОТА"; 
+    // ⚠️ СЮДА УКАЖИТЕ ТОЧНЫЙ ЮЗЕРНЕЙМ ВАШЕГО БОТА (БЕЗ СОБАЧКИ @):
+    const botUsername = "ИМЯ_ВАШЕГО_БОТА"; 
     
-    // Генерируем Deep Link и перенаправляем пользователя в чат с передачей данных
+    // Перенаправляем пользователя по универсальной ссылке-команде
     tg.openTelegramLink(`https://t.me{botUsername}?start=${base64Payload}`);
-    
-    // Закрываем мини-приложение
     tg.close();
 }
+
 
 
         // Обработчики кнопок
