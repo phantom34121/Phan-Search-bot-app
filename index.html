@@ -465,119 +465,124 @@
         </div>
     </div>
 
-        <script>
+            <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        // ⚠️ УКАЖИТЕ СЮДА IP-АДРЕС ВАШЕГО VPS СЕРВЕРА, ГДЕ ЗАПУЩЕН БОТ:
-        const SERVER_API_URL = "http://ВАШ_IP_СЕРВЕРА:8080"; 
-
-        let currentUserId = 0;
-
-        // Автоматическая загрузка профиля без перезагрузки Mini App
+        // Отображение имени пользователя из Telegram API
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             const user = tg.initDataUnsafe.user;
-            currentUserId = user.id;
             document.getElementById('prof-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-            
-            // Запрашиваем баланс с сервера по API
-            fetch(`${SERVER_API_URL}/api/get_profile?user_id=${user.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('prof-id').innerText = data.id;
-                        document.getElementById('prof-free').innerText = data.free;
-                        document.getElementById('prof-paid').innerText = data.paid;
-                    }
-                }).catch(err => console.error("Ошибка загрузки API профиля:", err));
+            document.getElementById('prof-id').innerText = user.id;
         }
 
+        // Переключение вкладок внутри интерфейса приложения
         function switchPage(pageId, element) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
             document.getElementById(`page-${pageId}`).classList.add('active');
             element.classList.add('active');
         }
 
-        // Старая функция для кнопок, которые по-прежнему должны отправлять данные в чат (например, тарифы)
+        // Нативная функция передачи данных в бота через закрытие Mini App
         function sendDataToBot(mode, value, subMode = null) {
-            const payload = { origin: "webapp_spa", mode: mode, sub_mode: subMode, value: value };
+            const payload = {
+                origin: "webapp_spa", 
+                mode: mode,           
+                sub_mode: subMode,    
+                value: value          
+            };
             tg.sendData(JSON.stringify(payload));
             tg.close();
         }
 
-        // 🔥 КРИТИЧЕСКИ ОБНОВЛЕННАЯ АСИНХРОННАЯ ФУНКЦИЯ ПОИСКА ПРЯМО НА ЭКРАНЕ
-        async iand triggerSearch() {
+        // Обработчики кнопок
+        function triggerSearch() {
             const query = document.getElementById('searchQueryInput').value.trim();
             if (!query) return alert('Введите поисковый запрос!');
-            if (!currentUserId) return alert('Ошибка авторизации Telegram API!');
-
-            const resultsBlock = document.getElementById('searchResultsBlock');
-            const counterEl = document.getElementById('resultsCounter');
-            const appendEl = document.getElementById('appendResultsHere');
-
-            // Показываем лоадер
-            resultsBlock.style.display = "block";
-            counterEl.innerText = "⏳ Выполняю полнотекстовый поиск по индексам...";
-            appendEl.innerHTML = "";
-
-            try {
-                // Делаем прямой POST запрос к СУБД SQLite через API бота
-                const response = await fetch(`${SERVER_API_URL}/api/search`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: query, user_id: currentUserId })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    counterEl.innerText = `✅ Найдено совпадений: ${data.count} строк.`;
-                    
-                    if (data.results.length === 0) {
-                        appendEl.innerHTML = `<div style="color: var(--danger-color);">Ничего не найдено.</div>`;
-                        return;
-                    }
-
-                    // Отрисовываем строки баз прямо на экран Mini App
-                    let htmlLines = "";
-                    data.results.forEach((match, index) => {
-                        htmlLines += `
-                            <div style="padding: 8px; border-bottom: 1px solid var(--border-color); background: #1c202b; margin-bottom: 5px; border-radius: 6px;">
-                                <span style="color: var(--accent-color);">[#${index+1}] База: ${match.file}</span><br>
-                                <span style="color: #fff; white-space: pre-wrap;">${match.data}</span>
-                            </div>`;
-                    });
-                    appendEl.innerHTML = htmlLines;
-                } else {
-                    counterEl.innerText = "❌ Ошибка обработки запроса сервером.";
-                }
-            } catch (error) {
-                console.error(error);
-                counterEl.innerText = "❌ Сервер СУБД временно недоступен или CORS заблокирован.";
-            }
+            sendDataToBot("search_db", query);
         }
 
-        // Остальные OSINT-функции (пока оставляем через отправку в чат, либо их можно переписать аналогично поиску)
-        function toolPhone() { sendDataToBot("tool_phone", document.getElementById('phoneInput').value.trim()); }
-        function toolIP() { sendDataToBot("tool_ip", document.getElementById('ipInput').value.trim()); }
-        function toolID() { sendDataToBot("tool_id", document.getElementById('usernameInput').value.trim()); }
-        function toolSherlock() { sendDataToBot("tool_sherlock", document.getElementById('sherlockInput').value.trim()); }
-        function toolWhois() { sendDataToBot("tool_whois", document.getElementById('domainInput').value.trim()); }
-        function toolPwned() { sendDataToBot("tool_pwned", document.getElementById('passwordInput').value.trim()); }
+        function toolPhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) return alert('Введите номер телефона!');
+            sendDataToBot("tool_phone", phone);
+        }
+
+        function toolIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) return alert('Введите IP-адрес!');
+            sendDataToBot("tool_ip", ip);
+        }
+
+        // Навигационные и сервисные методы пользователей
+        function toolID() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return alert('Введите юзернейм!');
+            sendDataToBot("tool_id", username);
+        }
+
+        function toolSherlock() {
+            const nickname = document.getElementById('sherlockInput').value.trim();
+            if (!nickname) return alert('Введите никнейм!');
+            sendDataToBot("tool_sherlock", nickname);
+        }
+
+        function toolWhois() {
+            const domain = document.getElementById('domainInput').value.trim();
+            if (!domain) return alert('Введите домен!');
+            sendDataToBot("tool_whois", domain);
+        }
+
+        function toolPwned() {
+            const password = document.getElementById('passwordInput').value.trim();
+            if (!password) return alert('Введите пароль!');
+            sendDataToBot("tool_pwned", password);
+        }
+
         function navPieces() { sendDataToBot("sys_nav", "custom_pieces"); }
         function navPromo() { sendDataToBot("sys_nav", "promo"); }
         function navHistory() { sendDataToBot("sys_nav", "history"); }
         function navClaimFree() { sendDataToBot("sys_nav", "claim_free"); }
         function navRefreshDB() { sendDataToBot("sys_nav", "refresh_db"); }
-        function buyPack(packName) { sendDataToBot("buy_pack", packName); }
-        function adminModifyBalance(actionType) { sendDataToBot("admin_cmd", `${document.getElementById('adminTargetId').value.trim()}:${document.getElementById('adminAmount').value.trim()}`, actionType); }
-        function adminControlUser(actionType) { sendDataToBot("admin_cmd", document.getElementById('adminControlId').value.trim(), actionType); }
-        function adminBroadcast() { sendDataToBot("admin_cmd", document.getElementById('broadcastTextArea').value.trim(), "broadcast"); }
-        function adminSetFreeLimit() { sendDataToBot("admin_cmd", document.getElementById('freeLimitInput').value.trim(), "set_free_limit"); }
-        function adminUtility(command) { sendDataToBot("admin_cmd", "execute", command); }
+
+        function buyPack(packName) {
+            sendDataToBot("buy_pack", packName);
+        }
+
+        // Панель администратора
+        function adminModifyBalance(actionType) {
+            const targetId = document.getElementById('adminTargetId').value.trim();
+            const amount = document.getElementById('adminAmount').value.trim();
+            if (!targetId || !amount) return alert('Заполните ID и количество!');
+            sendDataToBot("admin_cmd", `${targetId}:${amount}`, actionType); 
+        }
+
+        function adminControlUser(actionType) {
+            const targetId = document.getElementById('adminControlId').value.trim();
+            if (!targetId) return alert('Введите ID пользователя!');
+            sendDataToBot("admin_cmd", targetId, actionType); 
+        }
+
+        function adminBroadcast() {
+            const text = document.getElementById('broadcastTextArea').value.trim();
+            if (!text) return alert('Введите текст рассылки!');
+            sendDataToBot("admin_cmd", text, "broadcast");
+        }
+
+        function adminSetFreeLimit() {
+            const limit = document.getElementById('freeLimitInput').value.trim();
+            if (!limit) return alert('Введите число!');
+            sendDataToBot("admin_cmd", limit, "set_free_limit");
+        }
+
+        function adminUtility(command) {
+            sendDataToBot("admin_cmd", command, "execute");
+        }
     </script>
+
 
 </body>
 </html>
