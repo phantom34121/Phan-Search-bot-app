@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Phantom OSINT & DB — Управление</title>
-    <!-- Официальный скрипт Telegram WebApp -->
+    <!-- Официальный скрипт Telegram WebApp API -->
     <script src="https://telegram.org"></script>
     <style>
         :root {
@@ -30,7 +30,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             padding: 15px;
-            padding-bottom: 80px; /* Отступ под нижний навигатор */
+            padding-bottom: 80px;
         }
 
         h1, h2 {
@@ -123,7 +123,6 @@
             color: var(--danger-color);
         }
 
-        /* Сетка для тарифов */
         .tariff-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -164,7 +163,6 @@
             font-size: 12px;
         }
 
-        /* Кнопки дополнительных бонусов */
         .bonus-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -177,7 +175,6 @@
             font-size: 12px;
         }
 
-        /* Профиль */
         .profile-info {
             font-size: 14px;
             line-height: 1.6;
@@ -187,14 +184,12 @@
             font-weight: bold;
         }
 
-        /* Сетка утилит админа */
         .admin-utilities {
             display: grid;
             grid-template-columns: 1fr;
             gap: 8px;
         }
 
-        /* Нижний навигатор */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -228,7 +223,6 @@
             margin-bottom: 2px;
         }
 
-        /* Переключатель вкладок SPA */
         .page {
             display: none;
         }
@@ -257,15 +251,8 @@
         <div class="section">
             <h2>静态 Утилиты базы</h2>
             <button class="secondary" onclick="navRefreshDB()">🔄 Обновить базу файлов (Синхронизация)</button>
-        <!-- Блок, куда JS будет выводить результаты поиска динамически -->
-        <div id="searchResultsBlock" class="section" style="display: none; margin-top: 15px; border-color: var(--accent-color);">
-            <h2 style="color: var(--accent-color);">📄 Результаты сканирования:</h2>
-            <div id="resultsCounter" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;"></div>
-            <div id="appendResultsHere" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.5;">
-                <!-- Сюда будут влетать строки из базы данных -->
-            </div>
         </div>
-
+    </div>
 
     <!-- ========================================== -->
     <!-- СТРАНИЦА 2: OSINT                          -->
@@ -465,58 +452,35 @@
         </div>
     </div>
 
-               <script>
+    <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        // Отображение имени пользователя из Telegram API
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             const user = tg.initDataUnsafe.user;
             document.getElementById('prof-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
             document.getElementById('prof-id').innerText = user.id;
         }
 
-        // Переключение вкладок внутри интерфейса приложения
         function switchPage(pageId, element) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            
             document.getElementById(`page-${pageId}`).classList.add('active');
             element.classList.add('active');
         }
 
-        // Нативная функция передачи данных в бота через закрытие Mini App
-function sendDataToBot(mode, value, subMode = null) {
-    const payload = {
-        origin: "webapp_spa", 
-        mode: mode,           
-        sub_mode: subMode,    
-        value: value          
-    };
-    
-    const jsonString = JSON.stringify(payload);
-    
-    // 🔥 НАДЕЖНЫЙ UTF-8 КОДИРОВЩИК ДЛЯ РУССКИХ БУКВ
-    // btoa() ломается на кириллице, поэтому сначала переводим строку в URL-формат,
-    // кодируем побайтово и только потом собираем в Base64.
-    const utf8Bytes = encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-        return String.fromCharCode('0x' + p1);
-    });
-    const base64Payload = btoa(utf8Bytes);
-    
-    // ⚠️ ЗАМЕНИТЕ ЭТО СТРОГО НА ЮЗЕРНЕЙМ ВАШЕГО БОТА (БЕЗ ЗНАКА @):
-    const botUsername = "ИМЯ_ВАШЕГО_БОТА"; 
-    
-    // Отправляем универсальный диплинк в мессенджер
-    tg.openTelegramLink(`https://t.me{botUsername}?start=${base64Payload}`);
-    tg.close();
-}
+        // Чистая нативная отправка данных в чат без закрытия Mini App
+        function sendDataToBot(mode, value, subMode = null) {
+            const payload = {
+                origin: "webapp_spa", 
+                mode: mode,           
+                sub_mode: subMode,    
+                value: value          
+            };
+            tg.sendData(JSON.stringify(payload));
+        }
 
-
-
-
-        // Обработчики кнопок
         function triggerSearch() {
             const query = document.getElementById('searchQueryInput').value.trim();
             if (!query) return alert('Введите поисковый запрос!');
@@ -535,7 +499,6 @@ function sendDataToBot(mode, value, subMode = null) {
             sendDataToBot("tool_ip", ip);
         }
 
-        // Навигационные и сервисные методы пользователей
         function toolID() {
             const username = document.getElementById('usernameInput').value.trim();
             if (!username) return alert('Введите юзернейм!');
@@ -565,12 +528,8 @@ function sendDataToBot(mode, value, subMode = null) {
         function navHistory() { sendDataToBot("sys_nav", "history"); }
         function navClaimFree() { sendDataToBot("sys_nav", "claim_free"); }
         function navRefreshDB() { sendDataToBot("sys_nav", "refresh_db"); }
+        function buyPack(packName) { sendDataToBot("buy_pack", packName); }
 
-        function buyPack(packName) {
-            sendDataToBot("buy_pack", packName);
-        }
-
-        // Панель администратора
         function adminModifyBalance(actionType) {
             const targetId = document.getElementById('adminTargetId').value.trim();
             const amount = document.getElementById('adminAmount').value.trim();
@@ -597,13 +556,9 @@ function sendDataToBot(mode, value, subMode = null) {
         }
 
         function adminUtility(command) {
-            sendDataToBot("admin_cmd", command, "execute");
+            sendDataToBot("admin_cmd", "execute", command);
         }
     </script>
-
-
-
 </body>
 </html>
-
 
