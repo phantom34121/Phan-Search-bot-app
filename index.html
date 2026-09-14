@@ -487,16 +487,31 @@
         }
 
         // Нативная функция передачи данных в бота через закрытие Mini App
-        function sendDataToBot(mode, value, subMode = null) {
-            const payload = {
-                origin: "webapp_spa", 
-                mode: mode,           
-                sub_mode: subMode,    
-                value: value          
-            };
-            tg.sendData(JSON.stringify(payload));
-            tg.close();
-        }
+function sendDataToBot(mode, value, subMode = null) {
+    const payload = {
+        origin: "webapp_spa", 
+        mode: mode,           
+        sub_mode: subMode,    
+        value: value          
+    };
+    
+    // Переводим объект в строку JSON
+    const jsonString = JSON.stringify(payload);
+    
+    // Кодируем в формат Base64 (чтобы Telegram не ломал спецсимволы в ссылке)
+    // btoa не всегда дружит с кириллицей, поэтому используем безопасное кодирование:
+    const base64Payload = btoa(unescape(encodeURIComponent(jsonString)));
+    
+    // Замените 'ЮЗЕРНЕЙМ_ВАШЕГО_БОТА' на логин вашего бота в Telegram!
+    const botUsername = "ЮЗЕРНЕЙМ_ВАШЕГО_БОТА"; 
+    
+    // Генерируем Deep Link и перенаправляем пользователя в чат с передачей данных
+    tg.openTelegramLink(`https://t.me{botUsername}?start=${base64Payload}`);
+    
+    // Закрываем мини-приложение
+    tg.close();
+}
+
 
         // Обработчики кнопок
         function triggerSearch() {
